@@ -101,6 +101,17 @@ Player.prototype.getTextColor = function() {
 
 }
 
+Player.prototype.getLevel = function() {
+
+  /*
+   * Function Player.getLevel
+   * Returns the level of the player
+   */
+
+  return this.skills.getSkillLevel(CONST.PROPERTIES.EXPERIENCE)
+
+}
+
 Player.prototype.setLevel = function(level) {
   
   /*

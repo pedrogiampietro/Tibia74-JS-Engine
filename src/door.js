@@ -118,7 +118,7 @@ Door.prototype.handleEnterExpertiseDoor = function(player) {
     return player.sendCancelMessage("Only the worthy may pass!");
   }
 
-  if(player.characterStatistics.level < (this.actionId - 100)) {
+  if(player.getLevel() < (this.actionId - 100)) {
     return player.sendCancelMessage("Only the worthy may pass!");
   }
 
