@@ -40,4 +40,6 @@ if __name__ == "__main__":
       ssl_version=ssl.PROTOCOL_TLS
     )
 
+  print("Serving at", ADDRESS)
+
   httpd.serve_forever()

@@ -2,11 +2,11 @@
 
 # Installation
 
-The server runs on NodeJS and is lightweight. It requires only two NPM modules that can be installed using `npm install`. The client directory needs to be hosted and accessible over HTTP e.g., `cd client; python3 -m http.server`. It does not have to be Python but can also be done using Node, NGINX or Apache, or even GitHub pages. 
+The Open Tibia 7.4 server runs on a custom NodeJS server and protocol.
 
 # Running
 
-    git clone https://github.com/Inconcessus/Tibia74-JS-Engine.git`
+    git clone https://github.com/Inconcessus/Tibia74-JS-Engine.git
     cd Tibia74-JS-Engine
     npm install
 
@@ -29,3 +29,30 @@ The login server is responsible for creating and managing player accounts. If th
 # Client Server
 
 This simple HTTP server is only responsible for serving static files and can be replaced by e.g., Nginx, Apache, or Caddy.
+
+# Exploring
+
+Use the command `/waypoint <waypoint>` to travel to different places. Available waypoints:
+
+    rookgaard
+    thais
+    carlin
+    ab'dendriel
+    venore
+    poh
+    gm-island
+    senja
+    dracona
+    orc-fortress
+    edron
+    kazordoon
+    ankrahmun
+    darama
+    cormaya
+    fibula
+    white-flower
+    femur-hills
+    ghost-ship
+    mintwallin
+    cyclopolis
+    annihilator
