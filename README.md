@@ -6,11 +6,12 @@ The server runs on NodeJS and is lightweight. It requires only two NPM modules t
 
 # Running
 
-Clone the repository `git clone https://github.com/Inconcessus/Tibia74-JS-Engine.git`
-NPM dependencies can be installed using `npm install`.
-The server can be started by running `node engine.js`.
-The login server can be started by running `node login.js`.
-The client directory can be hosted running `python client-server.py`
+    git clone https://github.com/Inconcessus/Tibia74-JS-Engine.git`
+    cd Tibia74-JS-Engine
+    npm install
+    node engine.js
+    node login.js
+    python client-server.py
 
 Visit the resources hosted at `http://127.0.0.1:8000/` and login using the default credentials.
 
