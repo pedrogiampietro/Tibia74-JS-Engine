@@ -939,7 +939,7 @@ PacketReader.prototype.readPlayerInfo = function() {
     "attack": this.readUInt8(),
     "attackSlowness": this.readUInt8(),
     "equipment": this.readEquipment(),
-    "capacity": this.readUInt32(),
+    "maxCapacity": this.readUInt32(),
     "mounts": this.readOutfits(),
     "outfits": this.readOutfits(),
     "spellbook": this.readArray(),

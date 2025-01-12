@@ -123,6 +123,7 @@ Player.prototype.setState = function(data) {
   this.state.add("speed", this.setLevelSkillValue.bind(this, "speed"));
 
   // Set defaults
+  this.state.maxCapacity = data.maxCapacity;
   this.state.capacity = data.capacity;
   this.state.health = data.health;
   this.state.speed = data.speed;

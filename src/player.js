@@ -74,8 +74,6 @@ Player.prototype.addPlayerProperties = function(properties) {
    */
 
   // Add these properties
-  this.properties.add(CONST.PROPERTIES.CAPACITY, properties.maxCapacity);
-  this.properties.add(CONST.PROPERTIES.CAPACITY_MAX, properties.maxCapacity);
   this.properties.add(CONST.PROPERTIES.MOUNTS, properties.availableMounts);
   this.properties.add(CONST.PROPERTIES.OUTFITS, properties.availableOutfits);
   this.properties.add(CONST.PROPERTIES.SEX, properties.sex);
@@ -621,6 +619,17 @@ Player.prototype.purchase = function(offer, count) {
 
 }
 
+Player.prototype.getCapacity = function() {
+
+  /*
+   * Function Player.getCapacity
+   * Returns the available capacity for the player
+   */
+
+  return this.getProperty(CONST.PROPERTIES.CAPACITY);
+
+}
+
 Player.prototype.hasSufficientCapacity = function(thing) {
 
   /*
@@ -628,7 +637,7 @@ Player.prototype.hasSufficientCapacity = function(thing) {
    * Returns true if the player has sufficient capacity to carry the thing
    */
 
-  return this.characterStatistics.capacity >= thing.getWeight();
+  return this.getCapacity() >= thing.getWeight();
 
 }
 
@@ -705,7 +714,6 @@ Player.prototype.changeCapacity = function(value) {
    * Changes the available capacity of a player by a value
    */
 
-  return;
   this.setProperty(CONST.PROPERTIES.CAPACITY, this.getProperty(CONST.PROPERTIES.CAPACITY) + value);
 
   if(!this.containerManager) {
