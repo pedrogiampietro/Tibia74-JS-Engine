@@ -456,4 +456,34 @@ Creature.prototype.isInLineOfSight = function (other) {
   return this.position.inLineOfSight(other.getPosition());
 };
 
+Creature.prototype.increaseHealth = function (amount) {
+  /*
+   * Function Creature.increaseHealth
+   * Increases the health of the creature until a maximum
+   */
+
+  // Add debug logs
+  console.log("=== DEBUG HEALTH INCREASE ===");
+  console.log(
+    `Current Health before increase: ${this.getProperty(
+      CONST.PROPERTIES.HEALTH
+    )}`
+  );
+  console.log(`Max Health: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`);
+  console.log(`Amount to increase: ${amount}`);
+
+  this.setProperty(
+    CONST.PROPERTIES.HEALTH,
+    (this.getProperty(CONST.PROPERTIES.HEALTH) + amount).clamp(
+      0,
+      this.getProperty(CONST.PROPERTIES.HEALTH_MAX)
+    )
+  );
+
+  // Log after increase
+  console.log(
+    `Health after increase: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+  );
+};
+
 module.exports = Creature;

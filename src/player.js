@@ -41,10 +41,19 @@ const Player = function (data) {
   // Inherit from Creature class
   Creature.call(this, data.properties);
 
+  console.log("=== DEBUG PLAYER CONSTRUCTOR ===");
+  console.log("Initial data properties:", data.properties);
+
   this.templePosition = Position.prototype.fromLiteral(data.templePosition);
 
   // Add the player properties
   this.addPlayerProperties(data.properties);
+
+  console.log("=== AFTER PLAYER CONSTRUCTION ===");
+  console.log(`Initial Health: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`);
+  console.log(
+    `Initial Health Max: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`
+  );
 
   // The player skills and experience
   this.skills = new Skills(this, data.skills);
@@ -76,12 +85,19 @@ Player.prototype.addPlayerProperties = function (properties) {
    * Adds the properties of the player to the available properties
    */
 
+  console.log("=== DEBUG ADDING PLAYER PROPERTIES ===");
+  console.log("Initial properties:", properties);
+
   // Add these properties
   this.properties.add(CONST.PROPERTIES.MOUNTS, properties.availableMounts);
   this.properties.add(CONST.PROPERTIES.OUTFITS, properties.availableOutfits);
   this.properties.add(CONST.PROPERTIES.SEX, properties.sex);
   this.properties.add(CONST.PROPERTIES.ROLE, properties.role);
   this.properties.add(CONST.PROPERTIES.VOCATION, properties.vocation);
+
+  console.log("=== AFTER ADDING PROPERTIES ===");
+  console.log(`Health: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`);
+  console.log(`Health Max: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`);
 };
 
 Player.prototype.getTarget = function () {
@@ -307,11 +323,26 @@ Player.prototype.decreaseHealth = function (source, amount) {
    * Decreases the health of the player
    */
 
+  // Add debug logs
+  console.log("=== DEBUG HEALTH DECREASE ===");
+  console.log(
+    `Current Health before decrease: ${this.getProperty(
+      CONST.PROPERTIES.HEALTH
+    )}`
+  );
+  console.log(`Max Health: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`);
+  console.log(`Amount to decrease: ${amount}`);
+
   // Put the target player in combat
   this.combatLock.activate();
 
   // Change the property
   this.incrementProperty(CONST.PROPERTIES.HEALTH, -amount);
+
+  // Log after decrease
+  console.log(
+    `Health after decrease: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+  );
 
   // Send damage color to the player
   this.broadcast(new EmotePacket(this, String(amount), CONST.COLOR.RED));
@@ -342,9 +373,27 @@ Player.prototype.handleDeath = function () {
    * Called when the player dies because of zero health
    */
 
+  console.log("=== DEBUG PLAYER DEATH ===");
+  console.log(
+    `Health before death: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+  );
+  console.log(
+    `Health Max before death: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`
+  );
+
   // Restore the player to full health and mana
   this.setFull(CONST.PROPERTIES.HEALTH);
   this.setFull(CONST.PROPERTIES.MANA);
+
+  console.log("=== AFTER DEATH RESTORATION ===");
+  console.log(
+    `Health after restoration: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+  );
+  console.log(
+    `Health Max after restoration: ${this.getProperty(
+      CONST.PROPERTIES.HEALTH_MAX
+    )}`
+  );
 
   // Human corpse
   let corpse = gameServer.database.createThing(this.getCorpse());
@@ -694,6 +743,14 @@ Skills.prototype.setMaximumProperties = function () {
   // Vamos adicionar logs para ver os valores antes de serem definidos
   console.log("=== DEBUG MAX PROPERTIES ===");
   console.log(`Health antes de dividir: ${health}`);
+  console.log(
+    `Health Max atual: ${this.__player.getProperty(
+      CONST.PROPERTIES.HEALTH_MAX
+    )}`
+  );
+  console.log(
+    `Health atual: ${this.__player.getProperty(CONST.PROPERTIES.HEALTH)}`
+  );
   console.log(`Mana antes de dividir: ${mana}`);
   console.log(`Capacity antes de dividir: ${capacity}`);
 
@@ -711,9 +768,136 @@ Skills.prototype.setMaximumProperties = function () {
   this.__player.properties.add(CONST.PROPERTIES.MANA_MAX, mana);
   this.__player.properties.add(CONST.PROPERTIES.CAPACITY_MAX, capacity);
 
-  // Não precisamos mais chamar calculateMaxCapacity aqui, pois já ajustamos a capacidade acima
-  // let maxCapacity = this.calculateMaxCapacity(level, vocation);
-  // this.__player.setProperty(CONST.PROPERTIES.CAPACITY_MAX, maxCapacity);
+  // Log final values
+  console.log("=== FINAL VALUES ===");
+  console.log(
+    `Final Health Max: ${this.__player.getProperty(
+      CONST.PROPERTIES.HEALTH_MAX
+    )}`
+  );
+  console.log(
+    `Final Health: ${this.__player.getProperty(CONST.PROPERTIES.HEALTH)}`
+  );
+};
+
+Player.prototype.setFull = function (type) {
+  /*
+   * Function Player.setFull
+   * Sets the property to its maximum value
+   */
+
+  // Add debug logs for health
+  if (type === CONST.PROPERTIES.HEALTH) {
+    console.log("=== DEBUG SET FULL HEALTH ===");
+    console.log(
+      `Current Health before set full: ${this.getProperty(
+        CONST.PROPERTIES.HEALTH
+      )}`
+    );
+    console.log(
+      `Current Health Max: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`
+    );
+  }
+
+  switch (type) {
+    case CONST.PROPERTIES.HEALTH:
+      this.setProperty(
+        CONST.PROPERTIES.HEALTH,
+        this.getProperty(CONST.PROPERTIES.HEALTH_MAX)
+      );
+      break;
+    case CONST.PROPERTIES.MANA:
+      this.setProperty(
+        CONST.PROPERTIES.MANA,
+        this.getProperty(CONST.PROPERTIES.MANA_MAX)
+      );
+      break;
+  }
+
+  // Log after setting full health
+  if (type === CONST.PROPERTIES.HEALTH) {
+    console.log(
+      `Health after set full: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+    );
+  }
+};
+
+Player.prototype.incrementProperty = function (type, amount) {
+  /*
+   * Function Creature.incrementProperty
+   * Increases the health of an entity
+   */
+
+  // Add debug logs for health properties
+  if (
+    type === CONST.PROPERTIES.HEALTH ||
+    type === CONST.PROPERTIES.HEALTH_MAX
+  ) {
+    console.log("=== DEBUG INCREMENT PROPERTY ===");
+    console.log(`Property Type: ${type}`);
+    console.log(`Current Health: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`);
+    console.log(
+      `Current Health Max: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`
+    );
+    console.log(`Amount to increment: ${amount}`);
+  }
+
+  // Set the health of the creature
+  this.properties.incrementProperty(type, amount);
+
+  // Log after increment
+  if (
+    type === CONST.PROPERTIES.HEALTH ||
+    type === CONST.PROPERTIES.HEALTH_MAX
+  ) {
+    console.log(
+      `After increment - Health: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+    );
+    console.log(
+      `After increment - Health Max: ${this.getProperty(
+        CONST.PROPERTIES.HEALTH_MAX
+      )}`
+    );
+  }
+};
+
+Player.prototype.setProperty = function (type, value) {
+  /*
+   * Function Player.setProperty
+   * Sets a property value
+   */
+
+  // Add debug logs for health properties
+  if (
+    type === CONST.PROPERTIES.HEALTH ||
+    type === CONST.PROPERTIES.HEALTH_MAX
+  ) {
+    console.log("=== DEBUG SET PROPERTY ===");
+    console.log(`Property Type: ${type}`);
+    console.log(`Current Value: ${this.getProperty(type)}`);
+    console.log(`New Value: ${value}`);
+    console.log(`Current Health: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`);
+    console.log(
+      `Current Health Max: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`
+    );
+  }
+
+  let result = this.properties.setProperty(type, value);
+
+  // Log after set
+  if (
+    type === CONST.PROPERTIES.HEALTH ||
+    type === CONST.PROPERTIES.HEALTH_MAX
+  ) {
+    console.log(
+      `After set - Health: ${this.getProperty(CONST.PROPERTIES.HEALTH)}`
+    );
+    console.log(
+      `After set - Health Max: ${this.getProperty(CONST.PROPERTIES.HEALTH_MAX)}`
+    );
+  }
+
+  return result;
 };
 
 module.exports = Player;
