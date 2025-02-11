@@ -663,6 +663,15 @@ Player.prototype.changeCapacity = function (value) {
   if (!this.containerManager) {
     return;
   }
+
+  // Atualizar a capacidade atual com base nos itens carregados
+  let totalWeight = this.containerManager.equipment.getTotalWeight();
+  let maxCapacity = this.getProperty(CONST.PROPERTIES.CAPACITY_MAX);
+  let currentCapacity = maxCapacity - totalWeight;
+  console.log(
+    `Total weight: ${totalWeight}, Max capacity: ${maxCapacity}, Current capacity: ${currentCapacity}`
+  );
+  this.setProperty(CONST.PROPERTIES.CAPACITY, currentCapacity);
 };
 
 Player.prototype.changeSlowness = function (speed) {
@@ -670,6 +679,41 @@ Player.prototype.changeSlowness = function (speed) {
   this.write(
     new CreaturePropertyPacket(this.getId(), CONST.PROPERTIES.SPEED, this.speed)
   );
+};
+
+Skills.prototype.setMaximumProperties = function () {
+  // Based on level and vocation
+  let level = this.getSkillLevel(CONST.PROPERTIES.EXPERIENCE);
+  let vocation = this.__player.getProperty(CONST.PROPERTIES.VOCATION);
+
+  let { health, mana, capacity } = this.__setMaximumPropertiesConsants(
+    vocation,
+    level
+  );
+
+  // Vamos adicionar logs para ver os valores antes de serem definidos
+  console.log("=== DEBUG MAX PROPERTIES ===");
+  console.log(`Health antes de dividir: ${health}`);
+  console.log(`Mana antes de dividir: ${mana}`);
+  console.log(`Capacity antes de dividir: ${capacity}`);
+
+  // Ajustar todos os valores para o limite do protocolo
+  health = Math.min(255, Math.floor(health / 100));
+  mana = Math.min(255, Math.floor(mana / 100));
+  capacity = Math.min(255, Math.floor(capacity / 100));
+
+  console.log(`Health após ajuste: ${health}`);
+  console.log(`Mana após ajuste: ${mana}`);
+  console.log(`Capacity após ajuste: ${capacity}`);
+
+  // Add these parameters too
+  this.__player.properties.add(CONST.PROPERTIES.HEALTH_MAX, health);
+  this.__player.properties.add(CONST.PROPERTIES.MANA_MAX, mana);
+  this.__player.properties.add(CONST.PROPERTIES.CAPACITY_MAX, capacity);
+
+  // Não precisamos mais chamar calculateMaxCapacity aqui, pois já ajustamos a capacidade acima
+  // let maxCapacity = this.calculateMaxCapacity(level, vocation);
+  // this.__player.setProperty(CONST.PROPERTIES.CAPACITY_MAX, maxCapacity);
 };
 
 module.exports = Player;

@@ -2,8 +2,7 @@
 
 const Skill = requireModule("skill");
 
-const Skills = function(player, points) {
-
+const Skills = function (player, points) {
   /*
    * Class Skills
    * Wrapper for the player skills
@@ -35,115 +34,181 @@ const Skills = function(player, points) {
 
   // Set the maximum properties based on experience level
   this.setMaximumProperties();
+};
 
-}
-
-Skills.prototype.__setMaximumPropertiesConsants = function(vocation, level) {
-
+Skills.prototype.__setMaximumPropertiesConsants = function (vocation, level) {
   /*
    * Function Skills.__setMaximumPropertiesConsants
    * Maximum properties are based on the player level
    */
 
   // https://tibia.fandom.com/wiki/Formulae#Hitpoints,_Mana_and_Capacity
-  switch(vocation) {
+  switch (vocation) {
     case CONST.VOCATION.NONE:
       return new Object({
-       "health": 5 * (level + 29),
-       "mana": 5 * (level + 10),
-       "capacity": 10 * (level + 39)
+        health: 5 * (level + 29),
+        mana: 5 * (level + 10),
+        capacity: 10 * (level + 39),
       });
     case CONST.VOCATION.KNIGHT:
     case CONST.VOCATION.ELITE_KNIGHT:
       return new Object({
-        "health": 5 * (3 * level + 13),
-        "mana": 5 * (level + 10),
-        "capacity": 5 * (5 * level + 54)
+        health: 5 * (3 * level + 13),
+        mana: 5 * (level + 10),
+        capacity: 5 * (5 * level + 54),
       });
     case CONST.VOCATION.PALADIN:
     case CONST.VOCATION.ROYAL_PALADIN:
       return new Object({
-        "health": 5 * (2 * level + 21),
-        "mana": 5 * (3 * level - 6),
-        "capacity": 10 * (2 * level + 31)
+        health: 5 * (2 * level + 21),
+        mana: 5 * (3 * level - 6),
+        capacity: 10 * (2 * level + 31),
       });
     case CONST.VOCATION.SORCERER:
     case CONST.VOCATION.MASTER_SORCERER:
     case CONST.VOCATION.DRUID:
     case CONST.VOCATION.ELDER_DRUID:
       return new Object({
-        "health": 5 * (level + 29),
-        "mana": 5 * (6 * level - 30),
-        "capacity": 10 * (level + 39)
+        health: 5 * (level + 29),
+        mana: 5 * (6 * level - 30),
+        capacity: 10 * (level + 39),
       });
   }
+};
 
-}
-
-Skills.prototype.setMaximumProperties = function() {
-
+Skills.prototype.setMaximumProperties = function () {
   /*
    * Function Skills.setMaximumProperties
    * Maximum properties are based on the player level
    */
 
+  // Adicionar logs no início da função para ver os dados do player
+  console.log("=== DEBUG PLAYER INFO ===");
+  console.log("Player properties:", {
+    properties: this.__player.properties.toJSON(),
+  });
+
   // Based on level and vocation
   let level = this.getSkillLevel(CONST.PROPERTIES.EXPERIENCE);
   let vocation = this.__player.getProperty(CONST.PROPERTIES.VOCATION);
 
-  let { health, mana, capacity } = this.__setMaximumPropertiesConsants(vocation, level);
+  console.log("=== DEBUG SKILL INFO ===");
+  console.log(
+    "Experience Skill Object:",
+    JSON.stringify(this.__getSkill(CONST.PROPERTIES.EXPERIENCE))
+  );
+  console.log(`Level calculado: ${level}`);
+  console.log(`Vocação atual: ${vocation}`);
+
+  console.log(
+    `Calculating maximum properties for level: ${level}, vocation: ${vocation}`
+  );
+
+  let { health, mana, capacity } = this.__setMaximumPropertiesConsants(
+    vocation,
+    level
+  );
 
   // Add these parameters too
   this.__player.properties.add(CONST.PROPERTIES.HEALTH_MAX, health);
   this.__player.properties.add(CONST.PROPERTIES.MANA_MAX, mana);
   this.__player.properties.add(CONST.PROPERTIES.CAPACITY_MAX, capacity);
 
-}
+  // Atualizar a capacidade máxima com base na vocação
+  let maxCapacity = this.calculateMaxCapacity(level, vocation);
+  console.log(`Max capacity calculated: ${maxCapacity}`);
+  this.__player.setProperty(CONST.PROPERTIES.CAPACITY_MAX, maxCapacity);
+};
 
-Skills.prototype.getSkillValue = function(type) {
+Skills.prototype.calculateMaxCapacity = function (level, vocation) {
+  console.log(
+    `Iniciando cálculo de capacidade máxima para level ${level} e vocação ${vocation}`
+  );
 
+  // Base capacity is 400
+  let capacity = 400;
+  console.log(`Capacidade base: ${capacity}`);
+
+  // Add capacity based on level
+  let levelBonus = (level - 1) * 10;
+  console.log(`Bônus por level (${level - 1} * 10): ${levelBonus}`);
+  capacity += levelBonus;
+
+  // Add vocation bonus
+  let vocationBonus = 0;
+  switch (vocation) {
+    case CONST.VOCATION.KNIGHT:
+      vocationBonus = level * 25;
+      break;
+    case CONST.VOCATION.PALADIN:
+      vocationBonus = level * 20;
+      break;
+    case CONST.VOCATION.SORCERER:
+    case CONST.VOCATION.DRUID:
+      vocationBonus = level * 10;
+      break;
+  }
+  console.log(`Bônus por vocação (${vocation}): ${vocationBonus}`);
+  capacity += vocationBonus;
+
+  // Ensure capacity doesn't exceed protocol limits (0-255)
+  let finalCapacity = Math.min(255, Math.floor(capacity / 100));
+  console.log(`Capacidade final calculada (raw): ${capacity}`);
+  console.log(`Capacidade final ajustada para protocolo: ${finalCapacity}`);
+
+  return finalCapacity;
+};
+
+Skills.prototype.getSkillValue = function (type) {
   /*
    * Function Skills.getSkillValue
-   * Sets a range property to the maximum 
+   * Sets a range property to the maximum
    */
 
   let skill = this.__getSkill(type);
 
-  if(skill === null) {
+  if (skill === null) {
     return null;
   }
 
   return skill.toJSON();
+};
 
-}
+Skills.prototype.getSkillLevel = function (type) {
+  console.log(`Tentando obter skill level para type: ${type}`);
 
-Skills.prototype.getSkillLevel = function(type) {
-
-  /*
-   * Function CreatureProperties.getSkillLevel
-   * Sets a range property to the maximum 
-   */
-    
   let skill = this.__getSkill(type);
 
-  if(skill === null) {
-    return null; 
-  } 
-  
-  return skill.getSkillLevel(this.__player.getVocation());
-  
-}  
+  if (skill === null) {
+    console.log(`AVISO: Skill ${type} é null!`);
+    return null;
+  }
 
-Skills.prototype.setSkillLevel = function(type, level) {
+  // Vamos adicionar mais logs para debug
+  console.log("Skill encontrada:", {
+    type: type,
+    value: skill.toJSON(),
+    rawSkill: skill,
+  });
 
+  let vocation = this.__player.getVocation();
+  let level = skill.getSkillLevel(vocation);
+  console.log(
+    `Skill ${type} level calculado: ${level} (vocation: ${vocation})`
+  );
+
+  return level;
+};
+
+Skills.prototype.setSkillLevel = function (type, level) {
   /*
    * Function Skills.setSkillLevel
    * Sets a particular skill to a particular level by calculating the number of required points
    */
 
   let skill = this.__getSkill(type);
-  
-  if(skill === null) {
+
+  if (skill === null) {
     return;
   }
 
@@ -152,11 +217,9 @@ Skills.prototype.setSkillLevel = function(type, level) {
 
   // Set the property through the player properties
   this.__player.setProperty(type, value);
+};
 
-}
-
-Skills.prototype.toJSON = function() {
-
+Skills.prototype.toJSON = function () {
   /*
    * Function Skills.toJSON
    * Serialization of the skills for the players
@@ -164,21 +227,19 @@ Skills.prototype.toJSON = function() {
 
   // Recover the values from the properties
   return new Object({
-    "magic": this.__getSkill(CONST.PROPERTIES.MAGIC),
-    "fist": this.__getSkill(CONST.PROPERTIES.FIST),
-    "club": this.__getSkill(CONST.PROPERTIES.CLUB),
-    "sword": this.__getSkill(CONST.PROPERTIES.SWORD),
-    "axe": this.__getSkill(CONST.PROPERTIES.AXE),
-    "distance": this.__getSkill(CONST.PROPERTIES.DISTANCE),
-    "shielding": this.__getSkill(CONST.PROPERTIES.SHIELDING),
-    "fishing": this.__getSkill(CONST.PROPERTIES.FISHING),
-    "experience": this.__getSkill(CONST.PROPERTIES.EXPERIENCE)
+    magic: this.__getSkill(CONST.PROPERTIES.MAGIC),
+    fist: this.__getSkill(CONST.PROPERTIES.FIST),
+    club: this.__getSkill(CONST.PROPERTIES.CLUB),
+    sword: this.__getSkill(CONST.PROPERTIES.SWORD),
+    axe: this.__getSkill(CONST.PROPERTIES.AXE),
+    distance: this.__getSkill(CONST.PROPERTIES.DISTANCE),
+    shielding: this.__getSkill(CONST.PROPERTIES.SHIELDING),
+    fishing: this.__getSkill(CONST.PROPERTIES.FISHING),
+    experience: this.__getSkill(CONST.PROPERTIES.EXPERIENCE),
   });
+};
 
-}
-
-Skills.prototype.__getSkill = function(type) {
-
+Skills.prototype.__getSkill = function (type) {
   /*
    * Function Skills.__getSkill
    * Returns the skill of a particular type from the player properties
@@ -186,21 +247,19 @@ Skills.prototype.__getSkill = function(type) {
 
   let skill = this.__player.getProperty(type);
 
-  if(skill === null) {
+  if (skill === null) {
     return null;
   }
 
   // Must be of type skill
-  if(!(skill instanceof Skill)) {
+  if (!(skill instanceof Skill)) {
     return null;
   }
 
   return skill;
+};
 
-}
-
-Skills.prototype.__addSkillProperty = function(type, points) {
-
+Skills.prototype.__addSkillProperty = function (type, points) {
   /*
    * Function Skills.__addSkillProperty
    * Adds a skill to the map of properties
@@ -208,7 +267,6 @@ Skills.prototype.__addSkillProperty = function(type, points) {
 
   // Add the skills to the player properties
   this.__player.properties.add(type, new Skill(type, points));
-
-}
+};
 
 module.exports = Skills;
