@@ -53,17 +53,9 @@ CommandHandler.prototype.handleCommandAddSkill = function (
 ) {
   if (skill === "level") {
     try {
-      const skills = player.skills;
-      if (!skills) {
-        console.error("[AddSkill] Could not find skills object");
-        return gameServer.world.broadcastPacket(
-          new ServerMessagePacket("Could not access player skills")
-        );
-      }
-
       // Obter exp atual do objeto skills
-      const currentLevel = skills[7] || 1;
-      const currentExp = skills[6] || 0;
+      const currentExp = player.skills.experience || 0;
+      const currentLevel = Math.floor(currentExp / 100) + 1;
       const targetLevel = currentLevel + Number(amount);
 
       console.log("[AddSkill] Current Level:", currentLevel);
@@ -79,32 +71,108 @@ CommandHandler.prototype.handleCommandAddSkill = function (
 
       console.log("[AddSkill] Required Exp:", expRequired);
 
-      // Atualizar exp no objeto skills
-      skills[6] = currentExp + expRequired;
-
       // Recalcular atributos baseados no novo level
-      const newHealth = 150 + (targetLevel - 1) * 5; // 5 HP por level
-      const newMana = 35 + (targetLevel - 1) * 5; // 5 MP por level
-      const newCap = 400 + (targetLevel - 1) * 10; // 10 CAP por level
+      const newHealth = 150 + (targetLevel - 1) * 5;
+      const newMana = 35 + (targetLevel - 1) * 5;
+      const newCap = 400 + (targetLevel - 1) * 10;
 
-      // Atualizar o player em tempo real
-      player.setProperty(CONST.PROPERTIES.HEALTH, newHealth);
-      player.setProperty(CONST.PROPERTIES.MAX_HEALTH, newHealth);
-      player.setProperty(CONST.PROPERTIES.MANA, newMana);
-      player.setProperty(CONST.PROPERTIES.MAX_MANA, newMana);
-      player.setProperty(CONST.PROPERTIES.CAPACITY, newCap);
+      // Atualizar o player em tempo real usando as constantes corretas
+      // Primeiro setamos o MAX, depois o atual
+      player.setProperty(2, newHealth); // MAX_HEALTH primeiro
+      player.setProperty(1, newHealth); // HEALTH depois
+      player.setProperty(4, newMana); // MAX_MANA primeiro
+      player.setProperty(3, newMana); // MANA depois
+      player.setProperty(5, newCap); // CAPACITY
+
+      // Atualizar os valores no objeto properties
+      if (player.properties) {
+        player.properties.health = newHealth;
+        player.properties.maxHealth = newHealth;
+        player.properties.mana = newMana;
+        player.properties.maxMana = newMana;
+        player.properties.capacity = newCap;
+      }
+
+      // Salvar no banco de dados
+      if (player.socketHandler && player.socketHandler.account) {
+        // Criar um objeto com os dados atualizados
+        const characterData = {
+          position: {
+            x: player.position.x,
+            y: player.position.y,
+            z: player.position.z,
+          },
+          skills: {
+            magic: player.skills.magic || 0,
+            fist: player.skills.fist || 10,
+            club: player.skills.club || 10,
+            sword: player.skills.sword || 10,
+            axe: player.skills.axe || 10,
+            distance: player.skills.distance || 10,
+            shielding: player.skills.shielding || 10,
+            fishing: player.skills.fishing || 10,
+            experience: currentExp + expRequired,
+          },
+          properties: {
+            name: player.properties.name,
+            health: newHealth,
+            mana: newMana,
+            maxHealth: newHealth,
+            maxMana: newMana,
+            capacity: newCap,
+            speed: player.properties.speed,
+            defense: player.properties.defense,
+            attack: player.properties.attack,
+            attackSpeed: player.properties.attackSpeed,
+            direction: player.properties.direction,
+            outfit: player.properties.outfit,
+            role: player.properties.role,
+            vocation: player.properties.vocation,
+            sex: player.properties.sex,
+            availableMounts: player.properties.availableMounts,
+            availableOutfits: player.properties.availableOutfits,
+          },
+          lastVisit: Date.now(),
+          containers: player.containers,
+          spellbook: player.spellbook,
+          friends: player.friends,
+          templePosition: {
+            x: player.templePosition.x,
+            y: player.templePosition.y,
+            z: player.templePosition.z,
+          },
+        };
+
+        // Atualizar o player em memória
+        player.skills = characterData.skills;
+        player.properties = characterData.properties;
+
+        const AccountDatabase = requireModule("account-database");
+        const db = new AccountDatabase(CONFIG.DATABASE.FILEPATH);
+
+        // Salvar diretamente no banco
+        db.db.run(
+          "UPDATE accounts SET character = ? WHERE account = ?",
+          [JSON.stringify(characterData), player.socketHandler.account],
+          function (error) {
+            if (error) {
+              console.error("[AddSkill] Error saving to database:", error);
+            } else {
+              console.log(
+                "[AddSkill] Character saved successfully to database"
+              );
+            }
+            db.close();
+          }
+        );
+      }
 
       // Notificar o cliente sobre as mudanças
-      gameServer.world.broadcastPacket(
+      return gameServer.world.broadcastPacket(
         new ServerMessagePacket(
           `Added ${expRequired} experience points (${amount} levels). New level: ${targetLevel}`
         )
       );
-
-      // O servidor deve ter um mecanismo próprio para persistir os dados
-      // quando o player deslogar ou em intervalos regulares
-
-      return true;
     } catch (error) {
       console.error("[AddSkill] Error:", error);
       return gameServer.world.broadcastPacket(
